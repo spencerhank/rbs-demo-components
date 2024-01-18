@@ -1,5 +1,0 @@
-// Copyright 2017-2023 Cloud Software Group, Inc. All Rights Reserved.
-
-rootProject.name = 'ems-java-samples'
-include 'EmsConsumer'
-include 'EmsProducer'
