@@ -1,0 +1,7 @@
+# EMS URL
+#ems_server: tcp://localhost:7222
+# SOLACE URL
+ems_server: tcp://localhost:55554
+ems_username: emsuser
+tcm_authentication_key: password
+queue: TO.SOLACE
