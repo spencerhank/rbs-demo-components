@@ -1,6 +1,9 @@
 package kafka;
 
 
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Marshaller;
+import kafka.model.Order;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -8,14 +11,12 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 public class KafkaProducerApplication {
 
@@ -28,17 +29,18 @@ public class KafkaProducerApplication {
         outTopic = topic;
     }
 
-    public Future<RecordMetadata> produce(final String message) {
-        final String[] parts = message.split("-");
-        final String key, value;
-        if (parts.length > 1) {
-            key = parts[0];
-            value = parts[1];
-        } else {
-            key = null;
-            value = parts[0];
-        }
-        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, key, value);
+    public Future<RecordMetadata> produce(final String key, final String message) {
+//        final String[] parts = message.split("-");
+
+//        if (parts.length > 1) {
+//            key = parts[0];
+//            value = parts[1];
+//        } else {
+//            key = null;
+//            value = parts[0];
+//        }
+
+        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, key, message);
         return producer.send(producerRecord);
     }
 
@@ -84,17 +86,29 @@ public class KafkaProducerApplication {
 
         String filePath = args[1];
         try {
-            List<String> linesToProduce = Files.readAllLines(Paths.get(filePath));
-            List<Future<RecordMetadata>> metadata = linesToProduce.stream()
-                    .filter(l -> !l.trim().isEmpty())
-                    .map(producerApp::produce)
-                    .collect(Collectors.toList());
-            producerApp.printMetadata(metadata, filePath);
+            int numMessagesToSend = Integer.parseInt(props.getProperty("numMessagesToSend"));
+            while (numMessagesToSend > 0) {
+                //            List<String> linesToProduce = Files.readAllLines(Paths.get(filePath));
+                Order order = OrderGenerator.generateRandomOrder();
+                JAXBContext context = JAXBContext.newInstance(Order.class);
+                Marshaller marshaller = context.createMarshaller();
 
-        } catch (IOException e) {
-            System.err.printf("Error reading file %s due to %s %n", filePath, e);
-        }
-        finally {
+                StringWriter sw = new StringWriter();
+                marshaller.marshal(order,sw);
+                String xmlContent = sw.toString();
+                System.out.println(xmlContent);
+                Future<RecordMetadata> metadata = producerApp.produce(String.valueOf(order.getOrderNumber()), sw.toString());
+                producerApp.printMetadata(List.of(metadata), "testFile");
+//            List<Future<RecordMetadata>> metadata = linesToProduce.stream()
+//                    .filter(l -> !l.trim().isEmpty())
+//                    .map(producerApp::produce)
+//                    .collect(Collectors.toList());
+//            producerApp.printMetadata(metadata, filePath);
+                numMessagesToSend--;
+            }
+
+
+        } finally {
             producerApp.shutdown();
         }
     }
