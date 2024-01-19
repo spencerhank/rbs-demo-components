@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Order OrderNumber="99503" OrderDate="2023-01-18" StoreNumber="0005" Type="InStore">
+    <Address Type="Billing">
+        <Name>John Doe</Name>
+        <Street>456 Oak Lane</Street>
+        <City>Cityville</City>
+        <State>NY</State>
+        <Zip>56789</Zip>
+        <Country>USA</Country>
+    </Address>
+    <Products>
+        <Product ProductNumber="296420">
+            <ProductName>Food Lion Whole Milk Vitamin D</ProductName>
+            <Quantity>1</Quantity>
+            <USPrice>3.59</USPrice>
+        </Product>
+        <Item ProductNumber="311558">
+            <ProductName>Food Lion Beef Chuck Roast</ProductName>
+            <Quantity>5</Quantity>
+            <USPrice>6.99</USPrice>
+        </Item>
+    </Products>
+    <PaymentInformation>
+        <PaymentMethod>Cash</PaymentMethod>
+        <SubTotal>38.54</SubTotal>
+        <Tax>1.92</Tax>
+        <Currency>USD</Currency>
+    </PaymentInformation>
+</Order>

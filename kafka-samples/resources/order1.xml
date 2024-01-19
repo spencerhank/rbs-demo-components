@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Order OrderNumber="99503" OrderDate="2023-01-18" Type="Online">
+    <Address Type="Shipping">
+        <Name>Ellen Adams</Name>
+        <Street>123 Maple Street</Street>
+        <City>Mill Valley</City>
+        <State>CA</State>
+        <Zip>10999</Zip>
+        <Country>USA</Country>
+    </Address>
+
+    <Products>
+        <Product ProductNumber="356526">
+            <ProductName>Food Lion White Corn Tortilla Chips BiteSize Rounds</ProductName>
+            <Quantity>1</Quantity>
+            <USPrice>2.39</USPrice>
+        </Product>
+        <Item ProductNumber="327396">
+            <ProductName>Nature's Promise Ground Turkey 93% Lean 7%</ProductName>
+            <Quantity>2</Quantity>
+            <USPrice>4.29</USPrice>
+        </Item>
+    </Products>
+    <PaymentInformation>
+        <PaymentMethod>Credit</PaymentMethod>
+        <CardNumber>1234-5678-9012-3456</CardNumber>
+        <CVC>123</CVC>
+        <Address Type="Billing">
+            <Name>Ellen Adams</Name>
+            <Street>123 Maple Street</Street>
+            <City>Mill Valley</City>
+            <State>CA</State>
+            <Zip>10999</Zip>
+            <Country>USA</Country>
+        </Address>
+        <SubTotal>10.97</SubTotal>
+        <Tax>0.55</Tax>
+        <Currency>USD</Currency>
+    </PaymentInformation>
+</Order>
