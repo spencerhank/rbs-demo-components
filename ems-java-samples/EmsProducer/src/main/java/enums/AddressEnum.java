@@ -65,7 +65,7 @@ public enum AddressEnum {
 
         String phoneNumber = df3.format(num1) + "-" + df3.format(num2) + "-" + df4.format(num3);
         rewardsInfo.setPhoneNumber(phoneNumber);
-        rewardsInfo.setMemberId(UUID.randomUUID().toString());
+//        rewardsInfo.setMemberId(UUID.randomUUID().toString());
         return rewardsInfo;
     }
 }

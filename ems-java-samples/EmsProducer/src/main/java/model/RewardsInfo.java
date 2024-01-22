@@ -34,7 +34,7 @@ public class RewardsInfo {
     public String toString() {
         return "RewardsInfo{" +
                 "phoneNumber='" + phoneNumber + '\'' +
-                ", memberId='" + memberId + '\'' +
+//                ", memberId='" + memberId + '\'' +
                 '}';
     }
 }
