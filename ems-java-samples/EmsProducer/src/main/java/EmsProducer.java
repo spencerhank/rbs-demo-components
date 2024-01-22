@@ -1,43 +1,13 @@
 // Copyright 2017-2023 Cloud Software Group, Inc. All Rights Reserved.
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Vector;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
-import com.solacesystems.jms.SolConnectionFactory;
-import com.solacesystems.jms.SolJmsUtility;
 import com.tibco.tibjms.Tibjms;
 import com.tibco.tibjms.TibjmsConnectionFactory;
 import com.tibco.tibjms.naming.TibjmsContext;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import model.Transaction;
+import org.apache.commons.cli.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,6 +17,20 @@ import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+
+import javax.jms.*;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.StringWriter;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Vector;
 
 public class EmsProducer implements ExceptionListener {
     /*-----------------------------------------------------------------------
@@ -122,7 +106,7 @@ public class EmsProducer implements ExceptionListener {
         Tibjms.setExceptionOnFTEvents(true);
 
         Map<String, String> options =
-                EmsProducer.parseAppConfig(cmd.getOptionValue("f", "tcm-config.yaml"));
+                EmsProducer.parseAppConfig(cmd.getOptionValue("f", "config/tcm-config.yaml"));
         serverUrl = options.get("ems_server");
         userName = options.get("ems_username");
         password = options.get("tcm_authentication_key");
@@ -153,19 +137,19 @@ public class EmsProducer implements ExceptionListener {
                         "Expected ConnectionFactory but found: " + factory1.getClass().getName());
             factory = (ConnectionFactory) factory1;
         } else {
-//            TibjmsConnectionFactory factory1 = new com.tibco.tibjms.TibjmsConnectionFactory(
-//                    serverUrl, cmd.getOptionValue("id", "EmsProducer"), env);
-            SolConnectionFactory factory1 = SolJmsUtility.createConnectionFactory();
-            factory1.setHost(serverUrl);
-            factory1.setUsername(userName);
-            factory1.setPassword(password);
-            factory1.setVPN("default");
-//            factory1.setConnAttemptCount(200);
-//            factory1.setConnAttemptDelay(850);
-//            factory1.setConnAttemptTimeout(20000);
-//            factory1.setReconnAttemptCount(200);
-//            factory1.setReconnAttemptDelay(850);
-//            factory1.setReconnAttemptTimeout(20000);
+            TibjmsConnectionFactory factory1 = new com.tibco.tibjms.TibjmsConnectionFactory(
+                    serverUrl, cmd.getOptionValue("id", "EmsProducer"), env);
+//            SolConnectionFactory factory1 = SolJmsUtility.createConnectionFactory();
+//            factory1.setHost(serverUrl);
+//            factory1.setUsername(userName);
+//            factory1.setPassword(password);
+//            factory1.setVPN("default");
+            factory1.setConnAttemptCount(200);
+            factory1.setConnAttemptDelay(850);
+            factory1.setConnAttemptTimeout(20000);
+            factory1.setReconnAttemptCount(200);
+            factory1.setReconnAttemptDelay(850);
+            factory1.setReconnAttemptTimeout(20000);
             factory = (ConnectionFactory) factory1;
         }
 
@@ -177,8 +161,8 @@ public class EmsProducer implements ExceptionListener {
 
 
         /* create the session */
-//        session = connection.createSession(javax.jms.Session.AUTO_ACKNOWLEDGE);
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session = connection.createSession(javax.jms.Session.AUTO_ACKNOWLEDGE);
+//        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         /* create the destination */
         if (useTopic)
@@ -190,52 +174,69 @@ public class EmsProducer implements ExceptionListener {
         msgProducer = session.createProducer(destination);
 
         int count = Integer.parseInt(cmd.getOptionValue("c", "-1"));
-        CountDownLatch latch = new CountDownLatch(1);
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+//        CountDownLatch latch = new CountDownLatch(1);
+//        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
 
-        Runnable task = () -> {
-            if (latch.getCount() <= 0)
-                return;
+
+//            if (latch.getCount() <= 0)
+//                return;
+        while(count > 0) {
             try {
-                MapMessage msg = session.createMapMessage();
+//                MapMessage msg = session.createMapMessage();
+                Transaction transaction = TransactionGenerator.generateRandomOrder();
+                JAXBContext context = JAXBContext.newInstance(Transaction.class);
+                Marshaller marshaller = context.createMarshaller();
+
+                StringWriter sw = new StringWriter();
+                marshaller.marshal(transaction,sw);
+                String xmlContent = sw.toString();
+                System.out.println(xmlContent);
+                ObjectMessage msg = session.createObjectMessage(xmlContent);
+
                 Instant now = Instant.now();
                 long time = (now.getEpochSecond() * 1000000000L) + now.getNano();
-                msg.setInt("Sqn", sent);
-                msg.setLong("Time", time);
+//                msg.setInt("Sqn", sent);
+//                msg.setLong("Time", time);
+//                TODO: additional header properties?
+                msg.setStringProperty("TRANSACTION_ACTION", transaction.getTransactionAction().name());
+                msg.setStringProperty("STORE_NAME", transaction.getPurchaseChannel().getStoreName());
+                msg.setStringProperty("STORE_ID", transaction.getPurchaseChannel().getStoreId());
                 msgProducer.send(msg);
                 logger.info("Delivered " + msg.toString());
                 ++sent;
-                if (count > 0 && sent >= count) {
-                    executor.shutdown();
-                    latch.countDown();
-                }
-            } catch (JMSException e) {
+//                if (count > 0 && sent >= count) {
+//                    executor.shutdown();
+//                    latch.countDown();
+//                }
+            } catch (JMSException | JAXBException e) {
                 logger.error("Delivery failed " + e.toString());
-                executor.shutdown();
-                latch.countDown();
+//                executor.shutdown();
+//                latch.countDown();
             }
-        };
+            count--;
+        }
+
 
         // schedule periodic sending
         int ivl = Integer.parseInt(cmd.getOptionValue("i", "1000"));
-        executor.scheduleAtFixedRate(task, 0, ivl, TimeUnit.MILLISECONDS);
+//        executor.scheduleAtFixedRate(task, 0, ivl, TimeUnit.MILLISECONDS);
 
         // schedule timeout if needed
-        long timeout = Long.parseLong(cmd.getOptionValue("t", "-1"));
-        ScheduledFuture<?> timeoutFuture = null;
-        if (timeout > 0) {
-            task = () -> {
-                logger.info("Sent " + sent + " messages before timeout");
-                executor.shutdown();
-                latch.countDown();
-            };
-            timeoutFuture = executor.schedule(task, timeout, TimeUnit.SECONDS);
-        }
-
-        latch.await();
-        if (timeoutFuture != null) {
-            timeoutFuture.cancel(true);
-        }
+//        long timeout = Long.parseLong(cmd.getOptionValue("t", "-1"));
+//        ScheduledFuture<?> timeoutFuture = null;
+//        if (timeout > 0) {
+//            task = () -> {
+//                logger.info("Sent " + sent + " messages before timeout");
+//                executor.shutdown();
+//                latch.countDown();
+//            };
+//            timeoutFuture = executor.schedule(task, timeout, TimeUnit.SECONDS);
+//        }
+//
+//        latch.await();
+//        if (timeoutFuture != null) {
+//            timeoutFuture.cancel(true);
+//        }
         connection.close();
         logger.info("Delivered " + sent + " messages");
     }

@@ -4,6 +4,9 @@ plugins {
     id 'application'
 }
 
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
+
 repositories {
     mavenCentral()
 }
@@ -16,6 +19,9 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.0'
     implementation('com.solacesystems:sol-jms:10.19.0')
     implementation group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1'
+    implementation 'com.sun.xml.bind:jaxb-impl:3.0.0'
+    implementation 'com.github.javafaker:javafaker:1.0.2'
 
 }
 
