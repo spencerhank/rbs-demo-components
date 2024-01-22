@@ -9,6 +9,7 @@ import kafka.model.PaymentInformation;
 import kafka.model.Product;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -38,6 +39,7 @@ public class OrderGenerator {
             order.setStoreNumber("000" + random.nextInt(100));
         }
         order.setOrderNumber("000" + random.nextInt(1000));
+        order.setOrderDate(LocalDateTime.now().toString());
         order.setAddress(addr);
         order.setPaymentInformation(paymentInfo);
         order.setProducts(productList);

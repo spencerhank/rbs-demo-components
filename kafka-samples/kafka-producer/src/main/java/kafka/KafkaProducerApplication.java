@@ -29,7 +29,7 @@ public class KafkaProducerApplication {
         outTopic = topic;
     }
 
-    public Future<RecordMetadata> produce(final String key, final String message) {
+    public Future<RecordMetadata> produce(final Order order, final String message) {
 //        final String[] parts = message.split("-");
 
 //        if (parts.length > 1) {
@@ -40,7 +40,9 @@ public class KafkaProducerApplication {
 //            value = parts[0];
 //        }
 
-        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, key, message);
+        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, String.valueOf(order.getOrderNumber()), message);
+//        TODO: add headers for additional routing capabilities
+//        producerRecord.headers().add()
         return producer.send(producerRecord);
     }
 
@@ -97,7 +99,7 @@ public class KafkaProducerApplication {
                 marshaller.marshal(order,sw);
                 String xmlContent = sw.toString();
                 System.out.println(xmlContent);
-                Future<RecordMetadata> metadata = producerApp.produce(String.valueOf(order.getOrderNumber()), sw.toString());
+                Future<RecordMetadata> metadata = producerApp.produce(order, sw.toString());
                 producerApp.printMetadata(List.of(metadata), "testFile");
 //            List<Future<RecordMetadata>> metadata = linesToProduce.stream()
 //                    .filter(l -> !l.trim().isEmpty())
