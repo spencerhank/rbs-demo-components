@@ -4,7 +4,7 @@ import kafka.enums.AddressEnum;
 import kafka.enums.PaymentInformationEnum;
 import kafka.enums.ProductEnum;
 import kafka.model.Address;
-import kafka.model.Order;
+import kafka.model.Transaction;
 import kafka.model.PaymentInformation;
 import kafka.model.Product;
 
@@ -17,8 +17,8 @@ import java.util.Random;
 public class OrderGenerator {
 //    TODO: persist existing orders, add ability to randomly get existing order and update or cancel
 
-    public static Order generateRandomOrder() {
-        Order order = new Order();
+    public static Transaction generateRandomOrder() {
+        Transaction transaction = new Transaction();
         Address addr = AddressEnum.getRandomAddress();
         PaymentInformation paymentInfo = PaymentInformationEnum.getRandomPaymentInformation();
 
@@ -36,15 +36,15 @@ public class OrderGenerator {
         paymentInfo.setTax(tax);
 
         if(paymentInfo.getPaymentMethod().equalsIgnoreCase("cash")) {
-            order.setStoreNumber("000" + random.nextInt(100));
+            transaction.setStoreNumber("000" + random.nextInt(100));
         }
-        order.setOrderNumber("000" + random.nextInt(1000));
-        order.setOrderDate(LocalDateTime.now().toString());
-        order.setAddress(addr);
-        order.setPaymentInformation(paymentInfo);
-        order.setProducts(productList);
+        transaction.setOrderNumber("000" + random.nextInt(1000));
+        transaction.setOrderDate(LocalDateTime.now().toString());
+        transaction.setAddress(addr);
+        transaction.setPaymentInformation(paymentInfo);
+        transaction.setProducts(productList);
 
 
-        return order;
+        return transaction;
     }
 }

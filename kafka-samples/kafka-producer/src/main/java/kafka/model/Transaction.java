@@ -6,7 +6,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 @XmlRootElement
-public class Order {
+public class Transaction {
 
     private Address address;
 

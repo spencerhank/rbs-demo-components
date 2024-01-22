@@ -3,7 +3,7 @@ package kafka;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
-import kafka.model.Order;
+import kafka.model.Transaction;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -29,7 +29,7 @@ public class KafkaProducerApplication {
         outTopic = topic;
     }
 
-    public Future<RecordMetadata> produce(final Order order, final String message) {
+    public Future<RecordMetadata> produce(final Transaction transaction, final String message) {
 //        final String[] parts = message.split("-");
 
 //        if (parts.length > 1) {
@@ -40,7 +40,7 @@ public class KafkaProducerApplication {
 //            value = parts[0];
 //        }
 
-        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, String.valueOf(order.getOrderNumber()), message);
+        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, String.valueOf(transaction.getOrderNumber()), message);
 //        TODO: add headers for additional routing capabilities
 //        producerRecord.headers().add()
         return producer.send(producerRecord);
@@ -91,15 +91,15 @@ public class KafkaProducerApplication {
             int numMessagesToSend = Integer.parseInt(props.getProperty("numMessagesToSend"));
             while (numMessagesToSend > 0) {
                 //            List<String> linesToProduce = Files.readAllLines(Paths.get(filePath));
-                Order order = OrderGenerator.generateRandomOrder();
-                JAXBContext context = JAXBContext.newInstance(Order.class);
+                Transaction transaction = OrderGenerator.generateRandomOrder();
+                JAXBContext context = JAXBContext.newInstance(Transaction.class);
                 Marshaller marshaller = context.createMarshaller();
 
                 StringWriter sw = new StringWriter();
-                marshaller.marshal(order,sw);
+                marshaller.marshal(transaction,sw);
                 String xmlContent = sw.toString();
                 System.out.println(xmlContent);
-                Future<RecordMetadata> metadata = producerApp.produce(order, sw.toString());
+                Future<RecordMetadata> metadata = producerApp.produce(transaction, sw.toString());
                 producerApp.printMetadata(List.of(metadata), "testFile");
 //            List<Future<RecordMetadata>> metadata = linesToProduce.stream()
 //                    .filter(l -> !l.trim().isEmpty())
