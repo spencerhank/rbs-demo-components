@@ -42,8 +42,8 @@ public class KafkaProducerApplication {
 //        }
 
         final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, transaction.getPurchaseChannel().getChannel().name(), message);
-//        TODO: add headers for additional routing capabilities
         producerRecord.headers().add("STORE_NAME", transaction.getPurchaseChannel().getStoreName().getBytes(StandardCharsets.UTF_8));
+        producerRecord.headers().add("TRANSACTION_EVENT", transaction.getTransactionAction().name().getBytes(StandardCharsets.UTF_8));
         return producer.send(producerRecord);
     }
 
