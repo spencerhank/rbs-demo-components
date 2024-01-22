@@ -7,19 +7,21 @@ public class Address {
     private String state;
     private String zip;
     private String country;
+    private RewardsInfo rewardsInfo;
 
     // Constructors (default and parameterized)
 
     public Address() {
     }
 
-    public Address(String name, String street, String city, String state, String zip, String country) {
+    public Address(String name, String street, String city, String state, String zip, String country, RewardsInfo rewardsInfo) {
         this.name = name;
         this.street = street;
         this.city = city;
         this.state = state;
         this.zip = zip;
         this.country = country;
+        this.rewardsInfo = rewardsInfo;
     }
 
     // Getter and Setter methods for each field
@@ -84,5 +86,13 @@ public class Address {
                 ", zip='" + zip + '\'' +
                 ", country='" + country + '\'' +
                 '}';
+    }
+
+    public RewardsInfo getRewardsInfo() {
+        return rewardsInfo;
+    }
+
+    public void setRewardsInfo(RewardsInfo rewardsInfo) {
+        this.rewardsInfo = rewardsInfo;
     }
 }

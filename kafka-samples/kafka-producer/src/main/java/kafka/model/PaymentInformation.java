@@ -74,4 +74,16 @@ public class PaymentInformation {
     public void setCurrency(String currency) {
         this.currency = currency;
     }
+
+    @Override
+    public String toString() {
+        return "PaymentInformation{" +
+                "paymentMethod='" + paymentMethod + '\'' +
+                ", cardNumber='" + cardNumber + '\'' +
+                ", cvc=" + cvc +
+                ", subTotal=" + subTotal +
+                ", tax=" + tax +
+                ", currency='" + currency + '\'' +
+                '}';
+    }
 }

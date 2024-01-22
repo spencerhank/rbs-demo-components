@@ -1,6 +1,6 @@
 package kafka.enums;
 
-import kafka.model.Product;
+import kafka.model.Item;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -17,19 +17,19 @@ public enum ProductEnum {
     PRODUCT_5("Food Lion Beef Chuck Roast", BigInteger.valueOf(4), BigDecimal.valueOf(6.99), "311558");
 
 
-    private final Product product;
+    private final Item item;
 
     ProductEnum(String name, BigInteger quantity, BigDecimal usdPrice, String productNumber) {
-        this.product = new Product(name, quantity,usdPrice,productNumber);
+        this.item = new Item(name, quantity,usdPrice,productNumber);
     }
 
-    public Product getProduct() {
-        return product;
+    public Item getProduct() {
+        return item;
     }
 
     public static List<ProductEnum> getAllProducts() { return Arrays.asList(values());}
 
-    public static Product getRandomProduct() {
+    public static Item getRandomProduct() {
         Random random = new Random();
         return values()[random.nextInt(values().length)].getProduct();
     }

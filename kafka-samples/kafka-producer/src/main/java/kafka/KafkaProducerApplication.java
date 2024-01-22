@@ -12,6 +12,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -40,9 +41,9 @@ public class KafkaProducerApplication {
 //            value = parts[0];
 //        }
 
-        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, String.valueOf(transaction.getOrderNumber()), message);
+        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(outTopic, transaction.getPurchaseChannel().getChannel().name(), message);
 //        TODO: add headers for additional routing capabilities
-//        producerRecord.headers().add()
+        producerRecord.headers().add("STORE_NAME", transaction.getPurchaseChannel().getStoreName().getBytes(StandardCharsets.UTF_8));
         return producer.send(producerRecord);
     }
 
@@ -91,7 +92,7 @@ public class KafkaProducerApplication {
             int numMessagesToSend = Integer.parseInt(props.getProperty("numMessagesToSend"));
             while (numMessagesToSend > 0) {
                 //            List<String> linesToProduce = Files.readAllLines(Paths.get(filePath));
-                Transaction transaction = OrderGenerator.generateRandomOrder();
+                Transaction transaction = TransactionGenerator.generateRandomOrder();
                 JAXBContext context = JAXBContext.newInstance(Transaction.class);
                 Marshaller marshaller = context.createMarshaller();
 

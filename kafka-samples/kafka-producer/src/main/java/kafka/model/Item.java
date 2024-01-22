@@ -3,22 +3,22 @@ package kafka.model;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-public class Product {
+public class Item {
     private String name;
     private BigInteger quantity;
-    private BigDecimal usdPrice;
-    private String productNumber;
+    private BigDecimal price;
+    private String productId;
 
     // Constructors (default and parameterized)
 
-    public Product(String name, Integer quantity, double usdPrice, String productNumber) {
+    public Item(String name, Integer quantity, double usdPrice, String productId) {
     }
 
-    public Product(String name, BigInteger quantity, BigDecimal usdPrice, String productNumber) {
+    public Item(String name, BigInteger quantity, BigDecimal usdPrice, String productId) {
         this.name = name;
         this.quantity = quantity;
-        this.usdPrice = usdPrice;
-        this.productNumber = productNumber;
+        this.price = usdPrice;
+        this.productId = productId;
     }
 
     // Getter and Setter methods for each field
@@ -39,20 +39,20 @@ public class Product {
         this.quantity = quantity;
     }
 
-    public BigDecimal getUsdPrice() {
-        return usdPrice;
+    public BigDecimal getPrice() {
+        return price;
     }
 
-    public void setUsdPrice(BigDecimal usdPrice) {
-        this.usdPrice = usdPrice;
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
-    public String getProductNumber() {
-        return productNumber;
+    public String getProductId() {
+        return productId;
     }
 
-    public void setProductNumber(String productNumber) {
-        this.productNumber = productNumber;
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
 
     // toString() method for easy debugging
@@ -62,8 +62,8 @@ public class Product {
         return "Product{" +
                 "name='" + name + '\'' +
                 ", quantity=" + quantity +
-                ", usdPrice=" + usdPrice +
-                ", productNumber='" + productNumber + '\'' +
+                ", usdPrice=" + price +
+                ", productId='" + productId + '\'' +
                 '}';
     }
 }
