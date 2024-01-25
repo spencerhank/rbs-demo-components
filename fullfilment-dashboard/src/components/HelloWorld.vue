@@ -118,7 +118,7 @@
                   color="primary"
                   variant="tonal"
                   elevation="1"
-                  v-if="item.assignedTo == null"
+                  v-if="item.assignedTo == null || item.assignedTo == ''"
                   @click.prevent="fulfillmentStore.assignTaskToSelf(item)"
                   >Assign To Self</v-btn
                 >
@@ -131,9 +131,14 @@
                   >Release Task</v-btn
                 >
                 <v-btn
-                  color="primary"
-                  v-if="item.assignedTo != null && item.assignedTo != userName"
-                  >Release Task</v-btn
+                  color="secondary"
+                  disabled
+                  v-if="
+                    item.assignedTo != null &&
+                    item.assignedTo != '' &&
+                    item.assignedTo != userName
+                  "
+                  >Task Assigned to: {{ item.assignedTo }}</v-btn
                 >
               </v-card-actions>
             </v-card-item>

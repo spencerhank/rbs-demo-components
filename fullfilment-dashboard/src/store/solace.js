@@ -24,7 +24,8 @@ export const useSolaceStore = defineStore('solaceStore', () => {
                 url: 'wss://mr-connection-rzux89z11fn.messaging.solace.cloud:443',
                 vpnName: 'dr-test',
                 userName: 'solace-cloud-client',
-                password: 'prqf38pq8jetg1pfqdoof1t2l5'
+                password: 'prqf38pq8jetg1pfqdoof1t2l5',
+                noLocal: true
             });
         } catch (error) {
             console.log(error)
@@ -65,13 +66,28 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         // define message event listener
         solaceClient.session.on(solace.SessionEventCode.MESSAGE, function (message) {
             console.log('Received message via event consumer on topic: "' + message.getDestination().getName());
-            console.log('User property map: ', message.getUserPropertyMap());
-            //  For subscriptions only
-            for (const [callbackName, callback] of Object.entries(eventHandlers.value)) {
-                if (callbackName == message.getUserPropertyMap().getField('response-handler').getValue()) {
-                    callback(message)
+            try {
+                console.log('User property map: ', message.getUserPropertyMap());
+                //  For Request/Reply
+                for (const [callbackName, callback] of Object.entries(eventHandlers.value)) {
+                    if (callbackName == message.getUserPropertyMap().getField('response-handler').getValue()) {
+                        callback(message)
+                    }
+                }
+            } catch (error) {
+                console.log('No usermap');
+                for (const [topic, callback] of Object.entries(eventHandlers.value)) {
+                    const regex = topic.replace('*', '.*').replace('>', '.*')
+                    let destinationName = message.getDestination().getName();
+                    let found = destinationName.match(regex);
+                    if (found) {
+                        callback(message)
+                    }
                 }
             }
+
+
+
         });
         // connect the session
         try {
@@ -118,13 +134,15 @@ export const useSolaceStore = defineStore('solaceStore', () => {
                 });
                 messageConsumer.on(solace.MessageConsumerEventName.MESSAGE, function (message) {
                     console.log('Received message via event consumer on queue: "' + message.getDestination().getName());
-                    console.log('User property map: ', message.getUserPropertyMap());
                     //  For subscriptions only
-                    for (const [callbackName, callback] of Object.entries(eventHandlers.value)) {
-                        if (callbackName == message.getUserPropertyMap().getField('response-handler').getValue()) {
-                            callback(message)
-                        }
-                    }
+                    // for (const [topic, callback] of Object.entries(eventHandlers.value)) {
+                    //     const regex = topic.replace('*', '.*').replace('>', '.*')
+                    //     let destinationName = message.getDestination().getName();
+                    //     let found = destinationName.match(regex);
+                    //     if (found) {
+                    //         callback(message)
+                    //     }
+                    // }
                 });
                 messageConsumer.connect();
                 solaceClient.eventConsumer = messageConsumer;
@@ -136,8 +154,8 @@ export const useSolaceStore = defineStore('solaceStore', () => {
     }
 
     function addSubscriptionHandler(subscriptionTopic, responseHandler) {
-        this.evantHandlers.value[subscriptionTopic] = responseHandler;
-        solaceClient.eventConsumer.subscribe(
+        eventHandlers.value[subscriptionTopic] = responseHandler;
+        solaceClient.session.subscribe(
             solace.SolclientFactory.createTopicDestination(subscriptionTopic),
             true,
             subscriptionTopic,
@@ -147,7 +165,7 @@ export const useSolaceStore = defineStore('solaceStore', () => {
 
     function removeSubscriptionHandler(subscriptionTopic) {
         delete eventHandlers.value[subscriptionTopic];
-        solaceClient.session.unsubscribe(
+        solaceClient.eventConsumer.unsubscribe(
             solace.SolclientFactory.createTopicDestination(subscriptionTopic),
             true,
             subscriptionTopic,

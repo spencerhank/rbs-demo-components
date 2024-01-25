@@ -40,6 +40,23 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         solaceStore.sendRequest(payload, `request/fulfillment/orders/${currentStoreValue.value}/${currentStoreId.value}`, handleAvailableOrdersResponse)
+
+        // Session no local must be set to true
+        solaceStore.addSubscriptionHandler(`fulfillment/task/*/${currentStoreValue.value}/${currentStoreId.value}/>`, handlefilfillmentTaskUpdates);
+    }
+
+    function handlefilfillmentTaskUpdates(message) {
+        let updateToProcess = JSON.parse(message.getSdtContainer().getValue());
+        availableFulfillmentOrders.value.forEach(order => {
+            if (order.RowKey == updateToProcess.order.RowKey) {
+                order.assignedTo = updateToProcess.order.assignedTo;
+                order.fulfillmentStatus = updateToProcess.order.fulfillmentStatus;
+            } else {
+                return order;
+            }
+        });
+        // console.log(updateToProcess);
+
     }
 
     function connectToSolace() {
@@ -57,7 +74,6 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
     }
 
     function assignTaskToSelf(order) {
-        // TODO update fulfillment order table
         let payload = {
             order: order,
             action: 'ASSIGNED',
@@ -65,12 +81,10 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         order.assignedTo = currentUser.value;
-        solaceStore.publishMessage(`fulfillment/task/assigned/${currentStoreValue.value}/${currentStoreId.value}/${order.RowKey}`, payload);
+        solaceStore.publishMessage(`fulfillment/task/assigned/${currentStoreValue.value}/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`, payload);
     }
 
     function releaseTask(order) {
-        // TODO update fulfillment order table
-
         let payload = {
             order: order,
             action: 'RELEASED',
@@ -78,9 +92,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         order.assignedTo = null;
-        solaceStore.publishMessage(`fulfillment/task/released/${currentStoreValue.value}/${currentStoreId.value}/${order.RowKey}`, payload);
+        solaceStore.publishMessage(`fulfillment/task/released/${currentStoreValue.value}/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`, payload);
     }
-
 
     return {
         currentUser,
