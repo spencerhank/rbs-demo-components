@@ -155,6 +155,17 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         );
     }
 
+    function publishMessage(topic, payload) {
+        let message = solace.SolclientFactory.createMessage();
+        message.setDestination(solace.SolclientFactory.createTopicDestination(topic));
+        message.setSdtContainer(solace.SDTField.create(solace.SDTFieldType.STRING, JSON.stringify(payload)));
+        message.setDMQEligible(true);
+        message.setTimeToLive(15000);
+        console.log('Publishing message {} on topic {}', message, topic);
+        solaceClient.session.send(message);
+
+    }
+
     function sendRequest(payload, topic, responsehandler) {
         let message = solace.SolclientFactory.createMessage();
         let userPropertyMap = new solace.SDTMapContainer();
@@ -202,5 +213,6 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         addSubscriptionHandler,
         removeSubscriptionHandler,
         sendRequest,
+        publishMessage
     }
 })

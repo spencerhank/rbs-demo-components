@@ -100,14 +100,41 @@
               </v-card-title>
               <v-card-subtitle align="left" class="ml-4"
                 >Store Id: {{ item.storeId }}<br />
-                Order Id: {{ item.Timestamp }}</v-card-subtitle
+                Last Updated: {{ item.Timestamp }}</v-card-subtitle
               >
-              <v-card-text align="left">{{
-                // TODO: update to display all order items
-                item.paymentInformation
-              }}</v-card-text>
+              <v-card-text align="left" class="ml-3">
+                <v-row
+                  v-for="(product, index) in formatProducts(
+                    JSON.parse(item.products)
+                  )"
+                  :key="product.productId"
+                >
+                  <p class="font-weight-bold">{{ product.name }}</p>
+                  : {{ product.quantity }}
+                </v-row>
+              </v-card-text>
               <v-card-actions>
-                <v-btn color="primary">Assign To Self</v-btn>
+                <v-btn
+                  color="primary"
+                  variant="tonal"
+                  elevation="1"
+                  v-if="item.assignedTo == null"
+                  @click.prevent="fulfillmentStore.assignTaskToSelf(item)"
+                  >Assign To Self</v-btn
+                >
+                <v-btn
+                  color="primary"
+                  v-if="item.assignedTo == userName"
+                  variant="outlined"
+                  elevation="1"
+                  @click.prevent="fulfillmentStore.releaseTask(item)"
+                  >Release Task</v-btn
+                >
+                <v-btn
+                  color="primary"
+                  v-if="item.assignedTo != null && item.assignedTo != userName"
+                  >Release Task</v-btn
+                >
               </v-card-actions>
             </v-card-item>
           </v-card>
@@ -193,6 +220,21 @@ function storeNameLookUp(storeValue) {
     }
   });
   return returnName;
+}
+
+function formatProducts(products) {
+  let formattedProducts = {};
+  products.forEach((product) => {
+    if (formattedProducts[product.productId]) {
+      var q = formattedProducts[product.productId].quantity;
+      q = q + product.quantity;
+      formattedProducts[product.productId].quantity = q;
+    } else {
+      formattedProducts[product.productId] = product;
+    }
+  });
+  console.log(formattedProducts);
+  return formattedProducts;
 }
 
 function canLogIn() {

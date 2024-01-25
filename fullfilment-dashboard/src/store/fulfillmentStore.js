@@ -56,6 +56,31 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
         console.log(availableFulfillmentOrders.value);
     }
 
+    function assignTaskToSelf(order) {
+        // TODO update fulfillment order table
+        let payload = {
+            order: order,
+            action: 'ASSIGNED',
+            storeValue: currentStoreValue.value,
+            storeId: currentStoreId.value
+        }
+        order.assignedTo = currentUser.value;
+        solaceStore.publishMessage(`fulfillment/task/assigned/${currentStoreValue.value}/${currentStoreId.value}/${order.RowKey}`, payload);
+    }
+
+    function releaseTask(order) {
+        // TODO update fulfillment order table
+
+        let payload = {
+            order: order,
+            action: 'RELEASED',
+            storeValue: currentStoreValue.value,
+            storeId: currentStoreId.value
+        }
+        order.assignedTo = null;
+        solaceStore.publishMessage(`fulfillment/task/released/${currentStoreValue.value}/${currentStoreId.value}/${order.RowKey}`, payload);
+    }
+
 
     return {
         currentUser,
@@ -63,6 +88,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
         currentStoreId,
         availableFulfillmentOrders,
         handleAvailableOrdersResponse,
-        disconnectSolace
+        disconnectSolace,
+        assignTaskToSelf,
+        releaseTask
     }
 })
