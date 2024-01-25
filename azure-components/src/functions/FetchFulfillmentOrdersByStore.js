@@ -140,7 +140,7 @@ app.http('FetchFulfillmentOrdersByStore', {
         const stringPayload = await request.text();
         const orderRequest = JSON.parse(stringPayload);
         context.log(request.headers.get('solace-user-property-response-handler'));
-        context.log(request.headers['solace-user-property-response-handler']);
+
         const responseHandler = request.headers.get('solace-user-property-response-handler');
 
         const tableQuery = new azure.TableQuery()

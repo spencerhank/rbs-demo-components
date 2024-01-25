@@ -20,7 +20,6 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         }
 
         try {
-            // TODO: update connection details
             solaceClient.session = solace.SolclientFactory.createSession({
                 url: 'wss://mr-connection-rzux89z11fn.messaging.solace.cloud:443',
                 vpnName: 'dr-test',
@@ -33,7 +32,7 @@ export const useSolaceStore = defineStore('solaceStore', () => {
 
         solaceClient.session.on(solace.SessionEventCode.UP_NOTICE, function (sessionEvent) {
             console.log('=== Successfully connected and ready to subscribe. ===')
-            readyToSend.value = true;
+            consume();
         });
 
         solaceClient.session.on(solace.SessionEventCode.CONNECT_FAILED_ERROR, function (sessionEvent) {
@@ -43,7 +42,6 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         solaceClient.session.on(solace.SessionEventCode.DISCONNECTED, function (sessionEvent) {
             console.log('Disconnected.');
             solaceClient.subscribed = false;
-            readyToSend.value = false;
             if (solaceClient.session !== null) {
                 solaceClient.session.dispose();
                 solaceClient.session = null;
@@ -54,19 +52,19 @@ export const useSolaceStore = defineStore('solaceStore', () => {
             console.log('Cannot subscribe to topic: ' + sessionEvent.correlationKey);
         });
         //    For direct subscriptions
-        solaceClient.session.on(solace.SessionEventCode.SUBSCRIPTION_OK, function (sessionEvent) {
-            if (solaceClient.subscribed) {
-                solaceClient.subscribed = false;
-                console.log('Successfully unsubscribed from topic: ' + sessionEvent.correlationKey);
-            } else {
-                solaceClient.subscribed = true;
-                console.log('Successfully subscribed to topic: ' + sessionEvent.correlationKey);
-                console.log('=== Ready to receive messages. ===');
-            }
-        });
+        //    solaceClient.session.on(solace.SessionEventCode.SUBSCRIPTION_OK, function (sessionEvent) {
+        //      if (solaceClient.subscribed) {
+        //        solaceClient.subscribed = false;
+        //        console.log('Successfully unsubscribed from topic: ' + sessionEvent.correlationKey);
+        //      } else {
+        //        solaceClient.subscribed = true;
+        //        console.log('Successfully subscribed to topic: ' + sessionEvent.correlationKey);
+        //        console.log('=== Ready to receive messages. ===');
+        //      }
+        //    });
         // define message event listener
         solaceClient.session.on(solace.SessionEventCode.MESSAGE, function (message) {
-            console.log('Received message on topic: "' + message.getDestination().getName());
+            console.log('Received message via event consumer on topic: "' + message.getDestination().getName());
             console.log('User property map: ', message.getUserPropertyMap());
             //  For subscriptions only
             for (const [callbackName, callback] of Object.entries(eventHandlers.value)) {
@@ -84,9 +82,62 @@ export const useSolaceStore = defineStore('solaceStore', () => {
 
     }
 
+    function consume(queueName) {
+        if (solaceClient.session == null) {
+            connect();
+        } else {
+            console.log('Start Consuming');
+            try {
+
+                let messageConsumer = solaceClient.session.createMessageConsumer({
+                    queueDescriptor: { name: queueName, type: solace.QueueType.QUEUE, durable: false },
+                    acknowledgeMode: solace.MessageConsumerAcknowledgeMode.CLIENT,
+                    createIfMissing: true
+
+                })
+                messageConsumer.on(solace.MessageConsumerEventName.UP, function () {
+                    // TODO: determine what next
+                    messageConsumer.consuming = true;
+                    readyToSend.value = true;
+                    // messageConsumer.addSubscription(solaceClient.session.getSessionProperties()['_p2pInboxInUse']);
+                    console.log('=== Ready to receive messages. ===');
+                });
+                messageConsumer.on(solace.MessageConsumerEventName.CONNECT_FAILED_ERROR, function () {
+                    messageConsumer.consuming = false;
+                    console.log('=== Error: the message consumer could not bind to queue "' + queueName +
+                        '" ===\n   Ensure this queue exists on the message router vpn');
+                    messageConsumer.exit();
+                });
+                messageConsumer.on(solace.MessageConsumerEventName.DOWN, function () {
+                    messageConsumer.consuming = false;
+                    console.log('=== The message consumer is now down ===');
+                });
+                messageConsumer.on(solace.MessageConsumerEventName.DOWN_ERROR, function () {
+                    messageConsumer.consuming = false;
+                    console.log('=== An error happened, the message consumer is down ===');
+                });
+                messageConsumer.on(solace.MessageConsumerEventName.MESSAGE, function (message) {
+                    console.log('Received message via event consumer on queue: "' + message.getDestination().getName());
+                    console.log('User property map: ', message.getUserPropertyMap());
+                    //  For subscriptions only
+                    for (const [callbackName, callback] of Object.entries(eventHandlers.value)) {
+                        if (callbackName == message.getUserPropertyMap().getField('response-handler').getValue()) {
+                            callback(message)
+                        }
+                    }
+                });
+                messageConsumer.connect();
+                solaceClient.eventConsumer = messageConsumer;
+            } catch (error) {
+                console.log(error.toString());
+            }
+        }
+
+    }
+
     function addSubscriptionHandler(subscriptionTopic, responseHandler) {
         this.evantHandlers.value[subscriptionTopic] = responseHandler;
-        solaceClient.session.subscribe(
+        solaceClient.eventConsumer.subscribe(
             solace.SolclientFactory.createTopicDestination(subscriptionTopic),
             true,
             subscriptionTopic,
@@ -120,25 +171,26 @@ export const useSolaceStore = defineStore('solaceStore', () => {
     }
 
     function disconnect(queueName) {
-        if (solaceClient.session !== null) {
-            if (eventHandlers.value != null) {
-                console.log("Unsubscribing from topics");
-                for (var key in eventHandlers.value) {
-                    removeSubscriptionHandler(key);
+        if (solaceClient.session != null) {
+            if (solaceClient.eventConsumer != null && solaceClient.eventConsumer.consuming) {
+                solaceClient.eventConsumer.consuming = false;
+                readyToSend.value = false;
+                console.log('Disconnecting consumption from queue: ' + queueName);
+                try {
+                    solaceClient.eventConsumer.disconnect();
+                    solaceClient.eventConsumer.dispose();
+                    solaceClient.session.disconnect();
+                    solaceClient.session.dispose();
+                    solaceClient.eventConsumer = null;
+                } catch (error) {
+                    console.log(error.toString());
                 }
-                eventHandlers.value = {};
-
             } else {
-                console.log('No topic to unsubscribe From');
-            }
-            console.log('Disconnecting session: ' + queueName);
-            try {
-                solaceClient.session.disconnect();
-            } catch (error) {
-                console.log(error.toString());
+                console.log('Cannot disconnect the consumer because it is not connected to queue "' +
+                    queueName + '"');
             }
         } else {
-            console.log('Not connected from the Solace PubSub+ Broker');
+            console.log('Cannot disconnect the consumer because not connected to Solace PubSub+ Event Broker.');
         }
 
     }
