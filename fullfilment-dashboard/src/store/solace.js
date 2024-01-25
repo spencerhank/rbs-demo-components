@@ -4,6 +4,7 @@ import solace, { MessageOutcome } from 'solclientjs'
 
 export const useSolaceStore = defineStore('solaceStore', () => {
     const eventHandlers = ref({});
+    const readyToSend = ref(false);
 
 
     let factorProps = new solace.SolclientFactoryProperties();
@@ -21,10 +22,10 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         try {
             // TODO: update connection details
             solaceClient.session = solace.SolclientFactory.createSession({
-                url: 'ws://localhost:8008',
-                vpnName: 'default',
-                userName: 'default',
-                password: 'default'
+                url: 'wss://mr-connection-rzux89z11fn.messaging.solace.cloud:443',
+                vpnName: 'dr-test',
+                userName: 'solace-cloud-client',
+                password: 'prqf38pq8jetg1pfqdoof1t2l5'
             });
         } catch (error) {
             console.log(error)
@@ -32,6 +33,7 @@ export const useSolaceStore = defineStore('solaceStore', () => {
 
         solaceClient.session.on(solace.SessionEventCode.UP_NOTICE, function (sessionEvent) {
             console.log('=== Successfully connected and ready to subscribe. ===')
+            readyToSend.value = true;
         });
 
         solaceClient.session.on(solace.SessionEventCode.CONNECT_FAILED_ERROR, function (sessionEvent) {
@@ -41,6 +43,7 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         solaceClient.session.on(solace.SessionEventCode.DISCONNECTED, function (sessionEvent) {
             console.log('Disconnected.');
             solaceClient.subscribed = false;
+            readyToSend.value = false;
             if (solaceClient.session !== null) {
                 solaceClient.session.dispose();
                 solaceClient.session = null;
@@ -63,16 +66,12 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         });
         // define message event listener
         solaceClient.session.on(solace.SessionEventCode.MESSAGE, function (message) {
-            console.log('Received message on topic: "' + message.getDestination().getName() + '", details:\n' +
-                message.dump());
+            console.log('Received message on topic: "' + message.getDestination().getName());
+            console.log('User property map: ', message.getUserPropertyMap());
             //  For subscriptions only
-            for (const [topic, callback] of Object.entries(eventHandlers.value)) {
-                // TODO: confirm if MQTT only
-                // const regex = topic.replace('>', '.*')
-                let found = message.getDestination().getName().match(topic)
-                if (found) {
+            for (const [callbackName, callback] of Object.entries(eventHandlers.value)) {
+                if (callbackName == message.getUserPropertyMap().getField('response-handler').getValue()) {
                     callback(message)
-                    break;
                 }
             }
         });
@@ -96,7 +95,7 @@ export const useSolaceStore = defineStore('solaceStore', () => {
     }
 
     function removeSubscriptionHandler(subscriptionTopic) {
-        delete this.evantHandlers.value[subscriptionTopic];
+        delete eventHandlers.value[subscriptionTopic];
         solaceClient.session.unsubscribe(
             solace.SolclientFactory.createTopicDestination(subscriptionTopic),
             true,
@@ -105,13 +104,28 @@ export const useSolaceStore = defineStore('solaceStore', () => {
         );
     }
 
+    function sendRequest(payload, topic, responsehandler) {
+        let message = solace.SolclientFactory.createMessage();
+        let userPropertyMap = new solace.SDTMapContainer();
+        userPropertyMap.addField('response-handler', solace.SDTFieldType.STRING, responsehandler.name);
+        message.setDestination(solace.SolclientFactory.createTopicDestination(topic));
+        message.setUserPropertyMap(userPropertyMap);
+        payload['replyTo'] = solaceClient.session.getSessionProperties()['_p2pInboxInUse'];
+        message.setSdtContainer(solace.SDTField.create(solace.SDTFieldType.STRING, JSON.stringify(payload)));
+        message.setDMQEligible(true);
+        message.setTimeToLive(15000);
+
+        eventHandlers.value[responsehandler.name] = responsehandler;
+        solaceClient.session.send(message);
+    }
+
     function disconnect(queueName) {
         if (solaceClient.session !== null) {
             if (eventHandlers.value != null) {
                 console.log("Unsubscribing from topics");
-                eventHandlers.value.keys().forEach(eventHandlerSubscription => {
-                    removeSubscriptionHandler(eventHandlerSubscription);
-                })
+                for (var key in eventHandlers.value) {
+                    removeSubscriptionHandler(key);
+                }
                 eventHandlers.value = {};
 
             } else {
@@ -130,10 +144,11 @@ export const useSolaceStore = defineStore('solaceStore', () => {
     }
 
     return {
+        readyToSend,
         connect,
         disconnect,
         addSubscriptionHandler,
         removeSubscriptionHandler,
-        eventHandlers
+        sendRequest,
     }
 })

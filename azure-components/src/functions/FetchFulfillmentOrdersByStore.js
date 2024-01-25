@@ -4,12 +4,14 @@ const azure = require("azure-storage");
 
 const tableSvc = azure.createTableService(process.env["AzureWebJobsStorage"]);
 
-var TopicPublisher = function (solaceModule, topicName, payload) {
+var TopicPublisher = function (solaceModule, topicName, responseHandler, payload) {
     'use strict';
     var solace = solaceModule;
     var publisher = {};
     publisher.session = null;
     publisher.topicName = topicName;
+    publisher.payload = payload;
+    publisher.responseHandler = responseHandler;
 
     // Logger
     publisher.log = function (line) {
@@ -84,12 +86,14 @@ var TopicPublisher = function (solaceModule, topicName, payload) {
     // Publishes one message
     publisher.publish = function () {
         if (publisher.session !== null) {
-            var messageText = 'Sample Message';
+            var map = new solace.SDTMapContainer();
             var message = solace.SolclientFactory.createMessage();
+            map.addField('response-handler', solace.SDTFieldType.STRING, publisher.responseHandler);
+            message.setUserPropertyMap(map);
             message.setDestination(solace.SolclientFactory.createTopicDestination(publisher.topicName));
-            message.setBinaryAttachment(messageText);
+            message.setSdtContainer(solace.SDTField.create(solace.SDTFieldType.STRING, JSON.stringify(publisher.payload)));
             message.setDeliveryMode(solace.MessageDeliveryModeType.PERSISTENT);
-            publisher.log('Publishing message "' + messageText + '" to topic "' + publisher.topicName + '"...');
+            publisher.log('Publishing message "' + publisher.payload + '" to topic "' + publisher.topicName + '"...');
             try {
                 publisher.session.send(message);
                 publisher.log('Message published.');
@@ -129,19 +133,35 @@ var TopicPublisher = function (solaceModule, topicName, payload) {
     return publisher;
 };
 
-app.http('FetchTransactionsByStoreNameAndId', {
-    methods: ['GET', 'POST'],
+app.http('FetchFulfillmentOrdersByStore', {
+    methods: ['POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
-        // TODO: get store and store id from payload, add reply to header for response
+        const stringPayload = await request.text();
+        const orderRequest = JSON.parse(stringPayload);
+        context.log(request.headers.get('solace-user-property-response-handler'));
+        context.log(request.headers['solace-user-property-response-handler']);
+        const responseHandler = request.headers.get('solace-user-property-response-handler');
 
-        const tableQuery = new azure.TableQuery().top(10);
+        const tableQuery = new azure.TableQuery()
+            .where('storeName eq ?', orderRequest.storeName)
+            .and('storeId eq ?', Number(orderRequest.storeId));
+
+        var entityResolver = function (entity) {
+            var resolvedEntity = {};
+
+            for (key in entity) {
+                resolvedEntity[key] = entity[key]._;
+            }
+            return resolvedEntity;
+        }
         var options = {
-            payloadFormat: "application/json;odata=nometadata"
+            payloadFormat: "application/json;odata=nometadata",
+            entityResolver: entityResolver
         }
 
         const result = await new Promise((resolve, reject) => {
-            tableSvc.queryEntities("Transactions", tableQuery, null, this.options,
+            tableSvc.queryEntities("FulfillmentOrders", tableQuery, null, options,
                 (error, result) => {
                     if (error) {
                         reject(error);
@@ -161,7 +181,7 @@ app.http('FetchTransactionsByStoreNameAndId', {
             solace.SolclientFactory.init(factoryProps);
             var publisher = {};
 
-            var publisher = new TopicPublisher(solace, 'tutorial/topic', 'testPayload');
+            var publisher = new TopicPublisher(solace, orderRequest.replyTo, responseHandler, result.entries);
 
 
             publisher.connect();
