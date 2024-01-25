@@ -87,33 +87,31 @@
           color="primary"
         ></v-progress-circular>
       </v-row>
-      <v-row
-        class="d-flex align-center justify-center"
-        v-if="fulfillmentStore.availableFulfillmentOrders.length > 0"
-      >
-        <v-card
-          width="500"
-          elevation="10"
+      <div v-if="fulfillmentStore.availableFulfillmentOrders.length > 0">
+        <v-row
+          class="d-flex align-center justify-center"
           v-for="(item, index) in fulfillmentStore.availableFulfillmentOrders"
           :key="item.transactionId"
         >
-          <v-card-item>
-            <v-card-title align="left" class="ml-4">
-              {{ storeNameLookUp(item.storeName) }}
-            </v-card-title>
-            <v-card-subtitle align="left" class="ml-4"
-              >Store Id: {{ item.storeId }}</v-card-subtitle
-            >
-            <v-card-text align="left">{{
-              // TODO: update to display all order items
-              item.paymentInformation
-            }}</v-card-text>
-            <v-card-actions>
-              <v-btn color="primary">Assign To Self</v-btn>
-            </v-card-actions>
-          </v-card-item>
-        </v-card>
-      </v-row>
+          <v-card width="500" elevation="10" class="mt-10">
+            <v-card-item>
+              <v-card-title align="left" class="ml-4">
+                {{ storeNameLookUp(item.storeName) }}
+              </v-card-title>
+              <v-card-subtitle align="left" class="ml-4"
+                >Store Id: {{ item.storeId }}</v-card-subtitle
+              >
+              <v-card-text align="left">{{
+                // TODO: update to display all order items
+                item.paymentInformation
+              }}</v-card-text>
+              <v-card-actions>
+                <v-btn color="primary">Assign To Self</v-btn>
+              </v-card-actions>
+            </v-card-item>
+          </v-card>
+        </v-row>
+      </div>
     </v-responsive>
   </v-container>
 </template>
