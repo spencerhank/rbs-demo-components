@@ -9,6 +9,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
     const currentStoreValue = ref('');
     const currentStoreId = ref('');
     const availableFulfillmentOrders = ref([])
+    const subscribedTopics = ref([]);
+    const publishedTopic = ref('');
 
     watch(
         () => currentUser.value,
@@ -40,9 +42,12 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         solaceStore.sendRequest(payload, `request/fulfillment/orders/${currentStoreValue.value}/${currentStoreId.value}`, handleAvailableOrdersResponse)
+        subscribedTopics.value.push(`fulfillment/orders/${currentStoreValue.value}/${currentStoreId.value}`)
 
         // Session no local must be set to true
-        solaceStore.addSubscriptionHandler(`fulfillment/task/*/${currentStoreId.value}/>`, handlefilfillmentTaskUpdates);
+        const subscription = `fulfillment/task/${currentStoreValue.value}/${currentStoreId.value}/>`;
+        subscribedTopics.value.push(subscription)
+        solaceStore.addSubscriptionHandler(subscription, handlefilfillmentTaskUpdates);
     }
 
     function handlefilfillmentTaskUpdates(message) {
@@ -99,37 +104,6 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             }
         }
 
-        // if (updateToProcess.order != null) {
-        //     updatedOrder = updateToProcess.order
-        // } else {
-        //     updatedOrder = updateToProcess
-        // }
-        // console.log(updatedOrder)
-        // if (availableFulfillmentOrders.value.length == 0) {
-        //     availableFulfillmentOrders.value.push(updatedOrder);
-        // } else {
-        //     availableFulfillmentOrders.value.forEach(order => {
-        //         var rk = order?.RowKey || order.rowKey
-        //         if (rk == updatedOrder.rowKey) {
-        //             order.assignedTo = updatedOrder.assignedTo;
-        //             order.fulfillmentStatus = updatedOrder.fulfillmentStatus;
-        //             order.products = updatedOrder.products;
-        //             order.purchaseChannel = updatedOrder.purchaseChannel;
-        //             order.timeStamp = updatedOrder.timeStamp;
-        //             order.action = updatedOrder.action;
-        //         } else {
-        //             ordersToAdd.push(updatedOrder);
-        //             return order;
-        //         }
-        //     });
-        //     if (ordersToAdd.length > 0) {
-        //         availableFulfillmentOrders.value.push(ordersToAdd);
-        //     }
-
-        // }
-
-
-
     }
 
     function connectToSolace() {
@@ -139,6 +113,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
     function disconnectSolace() {
         solaceStore.disconnect();
         availableFulfillmentOrders.value = []
+        subscribedTopics.value = []
+        publishedTopic.value = '';
     }
 
     function handleAvailableOrdersResponse(result) {
@@ -155,7 +131,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         order.assignedTo = currentUser.value;
-        solaceStore.publishMessage(`fulfillment/task/assigned/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`, payload);
+        publishedTopic.value = `fulfillment/task/assigned/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
+        solaceStore.publishMessage(publishedTopic.value, payload);
     }
 
     function releaseTask(order) {
@@ -166,7 +143,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         order.assignedTo = null;
-        solaceStore.publishMessage(`fulfillment/task/released/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`, payload);
+        publishedTopic.value = `fulfillment/task/released/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
+        solaceStore.publishMessage(publishedTopic.value, payload);
     }
 
     return {
@@ -174,6 +152,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
         currentStoreValue,
         currentStoreId,
         availableFulfillmentOrders,
+        subscribedTopics,
+        publishedTopic,
         handleAvailableOrdersResponse,
         disconnectSolace,
         assignTaskToSelf,

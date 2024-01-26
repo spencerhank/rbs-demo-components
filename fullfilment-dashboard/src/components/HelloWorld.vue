@@ -4,13 +4,23 @@
       <div v-if="!showGreeting" class="text-h2 font-weight-bold mb-n1">
         Welcome Please Login
       </div>
-      <div class="py-6" />
+      <div class="py-6"></div>
 
-      <v-row class="d-flex align-center justify-center">
-        <v-col cols="auto">
+      <v-row class="d-flex">
+        <v-col cols="4" class="mt-auto" v-if="showGreeting">
+          <div class="text-h5">Subscribed Topics:</div>
+          <v-spacer></v-spacer>
+          <div
+            class="subtitle-1"
+            v-for="topic in fulfillmentStore.subscribedTopics"
+            :key="topic"
+          >
+            {{ topic }}
+          </div>
+        </v-col>
+        <v-col cols="4" class="mx-auto">
           <v-btn
             color="primary"
-            href="https://vuetifyjs.com/introduction/why-vuetify/#feature-guides"
             min-width="228"
             rel="noopener noreferrer"
             size="x-large"
@@ -23,14 +33,15 @@
 
             Log In
           </v-btn>
+          <v-img
+            class="mx-auto"
+            :width="300"
+            cover
+            aspect-ratio="16/9"
+            :src="storeImageLookUp()"
+          ></v-img>
 
-          <h2 v-if="showGreeting">
-            <v-img
-              :width="300"
-              cover
-              aspect-ratio="16/9"
-              :src="storeImageLookUp()"
-            ></v-img>
+          <h2 v-if="showGreeting" class="mx-auto">
             <div class="py-2"></div>
             Hello {{ userName }}
             <v-btn
@@ -41,20 +52,11 @@
             ></v-btn>
           </h2>
         </v-col>
-
-        <!-- <v-col cols="auto">
-          <v-btn
-            href="https://community.vuetifyjs.com/"
-            min-width="164"
-            rel="noopener noreferrer"
-            target="_blank"
-            variant="text"
-          >
-            <v-icon icon="mdi-account-group" size="large" start />
-
-            Community
-          </v-btn>
-        </v-col> -->
+        <v-col cols="4" class="mt-auto" v-if="showGreeting">
+          <div class="text-h5">Published Topic:</div>
+          <v-spacer></v-spacer>
+          <div class="subtitle-1">{{ fulfillmentStore.publishedTopic }}</div>
+        </v-col>
       </v-row>
       <div class="py-6"></div>
       <v-row class="d-flex align-center justify-center" v-if="showLoginForm">
@@ -93,13 +95,19 @@
           color="primary"
         ></v-progress-circular>
       </v-row>
-      <div v-if="fulfillmentStore.availableFulfillmentOrders.length > 0">
+      <v-row v-if="fulfillmentStore.availableFulfillmentOrders.length > 0">
         <v-col
+          cols="4"
           class="d-flex align-center justify-center"
           v-for="(item, index) in fulfillmentStore.availableFulfillmentOrders"
           :key="item.transactionId"
         >
-          <v-card width="500" elevation="10" class="mt-10">
+          <v-card
+            width="500"
+            height="215"
+            elevation="10"
+            class="mt-10 card-outter overflow-scroll"
+          >
             <v-card-item>
               <v-card-title align="left" class="ml-4">
                 {{ storeNameLookUp(item.storeName) }}
@@ -108,7 +116,7 @@
                 >Store Id: {{ item.storeId }}<br />
                 Last Updated: {{ item.Timestamp }}</v-card-subtitle
               >
-              <v-card-text align="left" class="ml-3">
+              <v-card-text align="left" class="ml-3 product-text">
                 <v-row
                   v-for="(product, index) in formatProducts(item.products)"
                   :key="product.productId"
@@ -117,7 +125,10 @@
                   : {{ product.quantity }}
                 </v-row>
               </v-card-text>
-              <v-card-actions v-if="item.action != 'CANCELLED'">
+              <v-card-actions
+                v-if="item.action != 'CANCELLED'"
+                class="card-actions"
+              >
                 <v-btn
                   color="primary"
                   variant="tonal"
@@ -145,16 +156,33 @@
                   >Task Assigned to: {{ item.assignedTo }}</v-btn
                 >
               </v-card-actions>
-              <v-card-actions v-if="item.action == 'CANCELLED'">
+              <v-card-actions
+                v-if="item.action == 'CANCELLED'"
+                class="card-actions"
+              >
                 <v-btn disabled variant="tonal">Cancelled</v-btn>
               </v-card-actions>
             </v-card-item>
           </v-card>
         </v-col>
-      </div>
+      </v-row>
     </v-responsive>
   </v-container>
 </template>
+
+<style scoped>
+.card-outter {
+  padding-bottom: 50px;
+}
+.card-actions {
+  position: absolute;
+  bottom: 10px;
+}
+.product-text {
+  overflow-y: scroll;
+  max-height: 65px;
+}
+</style>
 
 <script setup>
 import { ref, watch } from "vue";
