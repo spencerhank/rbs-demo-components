@@ -1,10 +1,9 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-start text-center fill-height">
-      <div class="text-body-2 font-weight-light mb-n1">Welcome to the</div>
-
-      <h1 class="text-h2 font-weight-bold">Order Fulfillment Dashboard</h1>
-
+      <div v-if="!showGreeting" class="text-h2 font-weight-bold mb-n1">
+        Welcome Please Login
+      </div>
       <div class="py-6" />
 
       <v-row class="d-flex align-center justify-center">
@@ -26,6 +25,13 @@
           </v-btn>
 
           <h2 v-if="showGreeting">
+            <v-img
+              :width="300"
+              cover
+              aspect-ratio="16/9"
+              :src="storeImageLookUp()"
+            ></v-img>
+            <div class="py-2"></div>
             Hello {{ userName }}
             <v-btn
               density="compact"
@@ -88,7 +94,7 @@
         ></v-progress-circular>
       </v-row>
       <div v-if="fulfillmentStore.availableFulfillmentOrders.length > 0">
-        <v-row
+        <v-col
           class="d-flex align-center justify-center"
           v-for="(item, index) in fulfillmentStore.availableFulfillmentOrders"
           :key="item.transactionId"
@@ -144,7 +150,7 @@
               </v-card-actions>
             </v-card-item>
           </v-card>
-        </v-row>
+        </v-col>
       </div>
     </v-responsive>
   </v-container>
@@ -166,41 +172,49 @@ const stores = ref([
   {
     title: "Food Lion",
     value: "FOOD_LION",
+    icon: "https://media.aholddelhaize.com/media/hvmhcpf2/foodlion-2x.svg?t=637545970709830000",
     storeIds: ["1000"],
   },
   {
     title: "Stop & Shop",
     value: "STOP_AND_SHOP",
+    icon: "https://media.aholddelhaize.com/media/1i3fpg1g/stopandshop.svg?t=637546103655330000",
     storeIds: ["1001"],
   },
   {
     title: "Giant",
     value: "GIANT",
+    icon: "https://media.aholddelhaize.com/media/yqwl5eab/giant-2x.svg?t=637545970723430000",
     storeIds: ["1002"],
   },
   {
     title: "Giant Co",
     value: "GIANT_FOOD_CO",
+    icon: "https://media.aholddelhaize.com/media/dz5bu1w3/giantcompany-2x.svg?t=637545970727200000",
     storeIds: ["1003", "1004", "1005"],
   },
   {
     title: "Hannaford",
     value: "HANNAFORD",
+    icon: "https://media.aholddelhaize.com/media/44qjep4p/hannaford.svg?t=637546102294000000",
     storeIds: ["1006"],
   },
   {
     title: "Fulfillment Center 1",
     value: "FULFILLMENT_CENTER_1",
+    icon: "https://www.aholddelhaize.com/media/zh5d2t02/ahold-delhaize-4x.png",
     storeIds: ["1008"],
   },
   {
     title: "Fulfillment Center 2",
     value: "FULFILLMENT_CENTER_1",
+    icon: "https://www.aholddelhaize.com/media/zh5d2t02/ahold-delhaize-4x.png",
     storeIds: ["1009"],
   },
   {
     title: "Fulfillment Center 3",
     value: "FULFILLMENT_CENTER_1",
+    icon: "https://www.aholddelhaize.com/media/zh5d2t02/ahold-delhaize-4x.png",
     storeIds: ["1010"],
   },
 ]);
@@ -226,6 +240,16 @@ function storeNameLookUp(storeValue) {
     }
   });
   return returnName;
+}
+
+function storeImageLookUp() {
+  let returnImage;
+  stores.value.forEach((store) => {
+    if (store.value == fulfillmentStore.currentStoreValue) {
+      returnImage = store.icon;
+    }
+  });
+  return returnImage;
 }
 
 function formatProducts(products) {
