@@ -45,7 +45,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
         subscribedTopics.value.push(`fulfillment/orders/${currentStoreValue.value}/${currentStoreId.value}`)
 
         // Session no local must be set to true
-        const subscription = `fulfillment/task/${currentStoreValue.value}/${currentStoreId.value}/>`;
+        const subscription = `fulfillment/task/*/${currentStoreId.value}/>`;
         subscribedTopics.value.push(subscription)
         solaceStore.addSubscriptionHandler(subscription, handlefilfillmentTaskUpdates);
     }
@@ -114,7 +114,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
         solaceStore.disconnect();
         availableFulfillmentOrders.value = []
         subscribedTopics.value = []
-        publishedTopic.value = '';
+        publishedTopic.value = ''
     }
 
     function handleAvailableOrdersResponse(result) {
