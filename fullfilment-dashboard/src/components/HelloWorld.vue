@@ -141,7 +141,8 @@
                   color="secondary"
                   variant="tonal"
                   v-if="
-                    item.assignedTo == userName && item.action != 'COMPLETED'
+                    item.assignedTo == userName &&
+                    item.fulfillmentStatus != 'COMPLETED'
                   "
                   elevation="1"
                   @click.prevent="fulfillmentStore.completeTask(item)"
@@ -150,7 +151,8 @@
                 <v-btn
                   color="primary"
                   v-if="
-                    item.assignedTo == userName && item.action != 'COMPLETED'
+                    item.assignedTo == userName &&
+                    item.fulfillmentStatus != 'COMPLETED'
                   "
                   variant="outlined"
                   elevation="1"
@@ -165,7 +167,7 @@
                     item.assignedTo != null &&
                     item.assignedTo != '' &&
                     item.assignedTo != userName &&
-                    item.action != 'COMPLETED'
+                    item.fulfillmentStatus != 'COMPLETED'
                   "
                   >Task Assigned to: {{ item.assignedTo }}</v-btn
                 >
@@ -177,7 +179,7 @@
                 <v-btn disabled variant="tonal">Cancelled</v-btn>
               </v-card-actions>
               <v-card-actions
-                v-if="item.action == 'COMPLETED'"
+                v-if="item.fulfillmentStatus == 'COMPLETED'"
                 class="card-actions"
               >
                 <v-btn disabled variant="tonal">Completed</v-btn>

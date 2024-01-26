@@ -119,7 +119,12 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
 
     function handleAvailableOrdersResponse(result) {
         console.log('handleAvailableOrdersResponse');
-        availableFulfillmentOrders.value = JSON.parse(result.getSdtContainer().getValue());
+        let orders = JSON.parse(result.getSdtContainer().getValue());
+        orders.forEach(order => {
+            if (order.action != 'COMPLETED') {
+                availableFulfillmentOrders.value.push(order)
+            }
+        })
         console.log(availableFulfillmentOrders.value);
     }
 
@@ -154,7 +159,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeValue: currentStoreValue.value,
             storeId: currentStoreId.value
         }
-        order.action = 'COMPLETED'
+        order.fulfillmentStatus = 'COMPLETED'
         publishedTopic.value = `fulfillment/task/completed/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
         solaceStore.publishMessage(publishedTopic.value, payload);
     }
