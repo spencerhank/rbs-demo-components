@@ -104,16 +104,14 @@
               >
               <v-card-text align="left" class="ml-3">
                 <v-row
-                  v-for="(product, index) in formatProducts(
-                    JSON.parse(item.products)
-                  )"
+                  v-for="(product, index) in formatProducts(item.products)"
                   :key="product.productId"
                 >
                   <p class="font-weight-bold">{{ product.name }}</p>
                   : {{ product.quantity }}
                 </v-row>
               </v-card-text>
-              <v-card-actions>
+              <v-card-actions v-if="item.action != 'CANCELLED'">
                 <v-btn
                   color="primary"
                   variant="tonal"
@@ -140,6 +138,9 @@
                   "
                   >Task Assigned to: {{ item.assignedTo }}</v-btn
                 >
+              </v-card-actions>
+              <v-card-actions v-if="item.action == 'CANCELLED'">
+                <v-btn disabled variant="tonal">Cancelled</v-btn>
               </v-card-actions>
             </v-card-item>
           </v-card>
@@ -228,16 +229,26 @@ function storeNameLookUp(storeValue) {
 }
 
 function formatProducts(products) {
+  products = JSON.parse(products);
   let formattedProducts = {};
-  products.forEach((product) => {
-    if (formattedProducts[product.productId]) {
-      var q = formattedProducts[product.productId].quantity;
-      q = q + product.quantity;
-      formattedProducts[product.productId].quantity = q;
-    } else {
-      formattedProducts[product.productId] = product;
-    }
-  });
+  if (Array.isArray(products)) {
+    products.forEach((product) => {
+      let jsonProduct = product;
+      if (product.productId == null) {
+        jsonProduct = JSON.parse(product);
+      }
+      if (formattedProducts[jsonProduct.productId]) {
+        var q = formattedProducts[jsonProduct.productId].quantity;
+        q = q + jsonProduct.quantity;
+        formattedProducts[jsonProduct.productId].quantity = q;
+      } else {
+        formattedProducts[jsonProduct.productId] = jsonProduct;
+      }
+    });
+  } else {
+    formattedProducts[products.productId] = products;
+  }
+
   console.log(formattedProducts);
   return formattedProducts;
 }
