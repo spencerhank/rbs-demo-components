@@ -138,20 +138,34 @@
                   >Assign To Self</v-btn
                 >
                 <v-btn
+                  color="secondary"
+                  variant="tonal"
+                  v-if="
+                    item.assignedTo == userName && item.action != 'COMPLETED'
+                  "
+                  elevation="1"
+                  @click.prevent="fulfillmentStore.completeTask(item)"
+                  >Complete Task</v-btn
+                >
+                <v-btn
                   color="primary"
-                  v-if="item.assignedTo == userName"
+                  v-if="
+                    item.assignedTo == userName && item.action != 'COMPLETED'
+                  "
                   variant="outlined"
                   elevation="1"
                   @click.prevent="fulfillmentStore.releaseTask(item)"
                   >Release Task</v-btn
                 >
+
                 <v-btn
                   color="secondary"
                   disabled
                   v-if="
                     item.assignedTo != null &&
                     item.assignedTo != '' &&
-                    item.assignedTo != userName
+                    item.assignedTo != userName &&
+                    item.action != 'COMPLETED'
                   "
                   >Task Assigned to: {{ item.assignedTo }}</v-btn
                 >
@@ -161,6 +175,12 @@
                 class="card-actions"
               >
                 <v-btn disabled variant="tonal">Cancelled</v-btn>
+              </v-card-actions>
+              <v-card-actions
+                v-if="item.action == 'COMPLETED'"
+                class="card-actions"
+              >
+                <v-btn disabled variant="tonal">Completed</v-btn>
               </v-card-actions>
             </v-card-item>
           </v-card>

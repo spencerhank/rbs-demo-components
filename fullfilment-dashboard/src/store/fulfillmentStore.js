@@ -147,6 +147,18 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
         solaceStore.publishMessage(publishedTopic.value, payload);
     }
 
+    function completeTask(order) {
+        let payload = {
+            order: order,
+            action: 'COMPLETED',
+            storeValue: currentStoreValue.value,
+            storeId: currentStoreId.value
+        }
+        order.action = 'COMPLETED'
+        publishedTopic.value = `fulfillment/task/completed/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
+        solaceStore.publishMessage(publishedTopic.value, payload);
+    }
+
     return {
         currentUser,
         currentStoreValue,
@@ -157,6 +169,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
         handleAvailableOrdersResponse,
         disconnectSolace,
         assignTaskToSelf,
-        releaseTask
+        releaseTask,
+        completeTask
     }
 })
