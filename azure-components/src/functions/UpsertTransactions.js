@@ -1,17 +1,18 @@
 const { app } = require('@azure/functions');
+const { TableClient, AzureSASCredential } = require("@azure/data-tables");
 const solace = require('solclientjs');
-const azure = require("azure-storage");
 
-const tableSvc = azure.createTableService(process.env["AzureWebJobsStorage"]);
+var factoryProps = new solace.SolclientFactoryProperties();
+factoryProps.profile = solace.SolclientFactoryProfiles.version10;
+solace.SolclientFactory.init(factoryProps);
 
-var TopicPublisher = function (solaceModule, topicName, responseHandler, payload) {
+var TopicPublisher = function (solaceModule, topicName, payload) {
     'use strict';
     var solace = solaceModule;
     var publisher = {};
     publisher.session = null;
     publisher.topicName = topicName;
     publisher.payload = payload;
-    publisher.responseHandler = responseHandler;
 
     // Logger
     publisher.log = function (line) {
@@ -27,26 +28,7 @@ var TopicPublisher = function (solaceModule, topicName, responseHandler, payload
 
     // Establishes connection to Solace PubSub+ Event Broker
     publisher.connect = function (argv) {
-        // if (publisher.session !== null) {
-        //     publisher.log('Already connected and ready to publish.');
-        //     return;
-        // }
-        // extract params
-        // if (argv.length < (2 + 3)) { // expecting 3 real arguments
-        //     publisher.log('Cannot connect: expecting all arguments' +
-        //         ' <protocol://host[:port]> <client-username>@<message-vpn> <client-password>.\n' +
-        //         'Available protocols are ws://, wss://, http://, https://, tcp://, tcps://');
-        //     process.exit();
-        // }
-        // var hosturl = argv.slice(2)[0];
-        // publisher.log('Connecting to Solace PubSub+ Event Broker using url: ' + hosturl);
-        // var usernamevpn = argv.slice(3)[0];
-        // var username = usernamevpn.split('@')[0];
-        // publisher.log('Client username: ' + username);
-        // var vpn = usernamevpn.split('@')[1];
-        // publisher.log('Solace PubSub+ Event Broker VPN name: ' + vpn);
-        // var pass = argv.slice(4)[0];
-        // create session
+
         try {
             publisher.session = solace.SolclientFactory.createSession({
                 // solace.SessionProperties
@@ -86,13 +68,10 @@ var TopicPublisher = function (solaceModule, topicName, responseHandler, payload
     // Publishes one message
     publisher.publish = function () {
         if (publisher.session !== null) {
-            var map = new solace.SDTMapContainer();
             var message = solace.SolclientFactory.createMessage();
-            map.addField('response-handler', solace.SDTFieldType.STRING, publisher.responseHandler);
-            message.setUserPropertyMap(map);
             message.setDestination(solace.SolclientFactory.createTopicDestination(publisher.topicName));
             message.setSdtContainer(solace.SDTField.create(solace.SDTFieldType.STRING, JSON.stringify(publisher.payload)));
-            message.setDeliveryMode(solace.MessageDeliveryModeType.PERSISTENT);
+            message.setDeliveryMode(solace.MessageDeliveryModeType.DIRECT);
             publisher.log('Publishing message "' + publisher.payload + '" to topic "' + publisher.topicName + '"...');
             try {
                 publisher.session.send(message);
@@ -133,70 +112,62 @@ var TopicPublisher = function (solaceModule, topicName, responseHandler, payload
     return publisher;
 };
 
-app.http('FetchFulfillmentOrdersByStore', {
+
+app.http('UpsertTransactions', {
     methods: ['POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
-        const stringPayload = await request.text();
-        const orderRequest = JSON.parse(stringPayload);
-        context.log(request.headers.get('solace-user-property-response-handler'));
-
-        const responseHandler = request.headers.get('solace-user-property-response-handler');
-
-        const tableQuery = new azure.TableQuery()
-            // .where('storeName eq ?', orderRequest.storeName)
-            .where('storeId eq ?', Number(orderRequest.storeId));
-
-        var entityResolver = function (entity) {
-            var resolvedEntity = {};
-
-            for (key in entity) {
-                resolvedEntity[key] = entity[key]._;
-            }
-            return resolvedEntity;
-        }
-        var options = {
-            payloadFormat: "application/json;odata=nometadata",
-            entityResolver: entityResolver
-        }
-
-        const result = await new Promise((resolve, reject) => {
-            tableSvc.queryEntities("FulfillmentOrders", tableQuery, null, options,
-                (error, result) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(result);
-                    }
-                });
-        }, this);
-        context.log(result.entries);
-
-
-
-        context.log(`Http function processed request for url "${request.url}"`);
         try {
-            var factoryProps = new solace.SolclientFactoryProperties();
-            factoryProps.profile = solace.SolclientFactoryProfiles.version10;
-            solace.SolclientFactory.init(factoryProps);
-            var publisher = {};
+            const stringPayload = await request.text();
+            const transaction = JSON.parse(stringPayload).transaction;
+            context.log(transaction);
 
-            var publisher = new TopicPublisher(solace, orderRequest.replyTo, responseHandler, result.entries);
 
+            let entityToUpsert = {
+                partitionKey: 'FulfillmentOrders',
+                rowKey: transaction.transactionId,
+                action: transaction.transactionAction,
+                paymentInformation: JSON.stringify(transaction.paymentInformation),
+                products: JSON.stringify(transaction.products),
+                purchaseChannel: transaction.purchaseChannel.channel,
+                storeName: transaction.purchaseChannel.storeName,
+                storeId: transaction.purchaseChannel.storeId,
+                rewardsInfo: JSON.stringify(transaction.rewardsInfo),
+                timestamp: transaction.timeStamp,
+                ID: transaction.transactionId,
+            }
+
+            // context.log(entityToUpsert);
+            const client = new TableClient(`https://hspencerrbsdemostorage.table.core.windows.net`,
+                'FulfillmentOrders',
+                new AzureSASCredential(process.env["fulfillmentTableSasTokenForUpdates"]));
+
+            await client.upsertEntity(
+                entityToUpsert,
+                "Merge"
+            );
+
+            const upserttedEntity = await client.getEntity(entityToUpsert.partitionKey, entityToUpsert.rowKey);
+
+            // TODO publish back to fulfillment app
+            var publisher = new TopicPublisher(solace, `fulfillment/task/${entityToUpsert.action}/${entityToUpsert.storeId}/${entityToUpsert.rowKey}/SYSTEM`, upserttedEntity);
 
             publisher.connect();
 
             process.stdin.resume();
 
-
-            // const name = request.query.get('name') || await request.text() || 'world';
+            context.log("Upsertted Entity: ", upserttedEntity);
 
             // return {
-            //     statu: 204,
-            //     body: 'Request Received'
+            //     statu: 200,
+            //     body: 'OK'
             // }
         } catch (error) {
             context.error(error);
+            return {
+                status: 500,
+                body: `${error}`
+            }
 
         }
 
