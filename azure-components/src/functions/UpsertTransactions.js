@@ -150,7 +150,7 @@ app.http('UpsertTransactions', {
             const upserttedEntity = await client.getEntity(entityToUpsert.partitionKey, entityToUpsert.rowKey);
 
             // TODO publish back to fulfillment app
-            var publisher = new TopicPublisher(solace, `fulfillment/task/${entityToUpsert.action}/${entityToUpsert.storeId}/${entityToUpsert.rowKey}/SYSTEM`, upserttedEntity);
+            var publisher = new TopicPublisher(solace, `pickup/task/${entityToUpsert.action}/${entityToUpsert.storeId}/${entityToUpsert.rowKey}/SYSTEM`, upserttedEntity);
 
             publisher.connect();
 
