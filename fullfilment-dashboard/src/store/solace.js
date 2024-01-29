@@ -21,10 +21,10 @@ export const useSolaceStore = defineStore('solaceStore', () => {
 
         try {
             solaceClient.session = solace.SolclientFactory.createSession({
-                url: 'wss://mr-connection-rzux89z11fn.messaging.solace.cloud:443',
-                vpnName: 'dr-test',
+                url: 'wss://mr-connection-nikaxs0rfi5.messaging.solace.cloud:443',
+                vpnName: 'rbs-demo-azure',
                 userName: 'solace-cloud-client',
-                password: 'prqf38pq8jetg1pfqdoof1t2l5',
+                password: 'kvosrq2qh2o4gnbagf37ngbpp',
                 noLocal: true
             });
         } catch (error) {
