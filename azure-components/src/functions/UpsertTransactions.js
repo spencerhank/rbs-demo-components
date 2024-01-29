@@ -128,6 +128,7 @@ app.http('UpsertTransactions', {
                 rowKey: transaction.transactionId,
                 action: transaction.transactionAction,
                 paymentInformation: JSON.stringify(transaction.paymentInformation),
+                pickupTime: transaction.pickupTime,
                 products: JSON.stringify(transaction.products),
                 purchaseChannel: transaction.purchaseChannel.channel,
                 storeName: transaction.purchaseChannel.storeName,
