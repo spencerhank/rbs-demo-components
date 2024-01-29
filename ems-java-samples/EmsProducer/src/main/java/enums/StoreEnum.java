@@ -6,16 +6,17 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 public enum StoreEnum {
-    STOP_AND_SHOP("store", "001"),
-    GIANT("store", "002"),
-    GIANT_FOOD_CO_1("store", "003"),
-    GIANT_FOOD_CO_2("store", "004"),
-    GIANT_FOOD_CO_3("store", "005"),
-    HANNAFORD("store", "006"),
-    PEAPOD("delivery", "007"),
-    FULFILLMENT_CENTER_1("fulfillment", "008"),
-    FULFILLMENT_CENTER_2("fulfillment", "009"),
-    FULFILLMENT_CENTER_3("fulfillment", "010");
+    FOOD_LION("store", "1000"),
+    STOP_AND_SHOP("store", "1001"),
+    GIANT("store", "1002"),
+    GIANT_FOOD_CO_1("store", "1003"),
+    GIANT_FOOD_CO_2("store", "1004"),
+    GIANT_FOOD_CO_3("store", "1005"),
+    HANNAFORD("store", "1006"),
+    PEAPOD("delivery", "1007"),
+    FULFILLMENT_CENTER_1("fulfillment", "1008"),
+    FULFILLMENT_CENTER_2("fulfillment", "1009"),
+    FULFILLMENT_CENTER_3("fulfillment", "1010");
 
     private final String storeType;
     private final String storeId;

@@ -33,8 +33,8 @@ public class TransactionGenerator {
             if (random.nextBoolean()) {
                 // cancel transaction
                 transactionToModify.setTransactionAction(TransactionActionEnum.CANCELLED);
-                transactionMap.remove(transactionKeys.get(0));
-                transactionKeys.remove(0);
+                transactionMap.remove(transactionKeys.get(transactionKeyIndexToUpdate));
+                transactionKeys.remove(transactionKeyIndexToUpdate);
                 return transactionToModify;
             } else {
                 // update transaction
@@ -45,12 +45,13 @@ public class TransactionGenerator {
                 transaction.setProducts(getRandomItemsForTransaction());
                 // make sure paymentInfo.address doesn't change
                 paymentInformation = transaction.getPaymentInformation();
-                transactionKeys.remove(0);
+                transactionKeys.remove(transactionKeyIndexToUpdate);
             }
         } else {
             transaction.setTransactionAction(TransactionActionEnum.CREATED);
             transaction.setTransactionId(UUID.randomUUID().toString());
             transaction.setProducts(getRandomItemsForTransaction());
+            transaction.setPickUpTime(getRandomPickUpTime());
             paymentInformation = PaymentInformationEnum.getRandomPaymentInformation();
         }
 
@@ -109,11 +110,17 @@ public class TransactionGenerator {
 
     public static List<Item> getRandomItemsForTransaction() {
         Random random = new Random();
-        int randomNumber = random.nextInt(15) + 1;
+        int randomNumber = random.nextInt(5) + 1;
         List<Item> itemList = new ArrayList<>();
         for (int i = 0; i < randomNumber; i++) {
             itemList.add(ProductEnum.getRandomProduct());
         }
         return itemList;
+    }
+
+    public static String getRandomPickUpTime() {
+        Random random = new Random();
+        int randomHours = random.nextInt(48);
+        return LocalDateTime.now().plusHours(randomHours).toString();
     }
 }

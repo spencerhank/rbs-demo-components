@@ -24,6 +24,8 @@ public class Transaction implements Serializable {
 
     private PurchaseChannel purchaseChannel;
 
+    private String pickUpTime;
+
 
     public List<Item> getProducts() {
         return items;
@@ -104,9 +106,17 @@ public class Transaction implements Serializable {
                 ", items=" + items +
                 ", paymentInformation=" + paymentInformation +
                 ", timeStamp='" + timeStamp + '\'' +
-                ", purchaseChannel=" + purchaseChannel +
+                ", purchaseChannel=" + purchaseChannel + '\'' +
+                ", pickUpTime=" + pickUpTime +
                 '}';
     }
 
 
+    public String getPickUpTime() {
+        return pickUpTime;
+    }
+
+    public void setPickUpTime(String pickUpTime) {
+        this.pickUpTime = pickUpTime;
+    }
 }

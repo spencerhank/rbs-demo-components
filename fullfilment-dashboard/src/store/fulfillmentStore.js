@@ -41,11 +41,11 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeName: currentStoreValue.value,
             storeId: currentStoreId.value
         }
-        solaceStore.sendRequest(payload, `request/fulfillment/orders/${currentStoreValue.value}/${currentStoreId.value}`, handleAvailableOrdersResponse)
-        subscribedTopics.value.push(`fulfillment/orders/${currentStoreValue.value}/${currentStoreId.value}`)
+        solaceStore.sendRequest(payload, `request/pickup/orders/${currentStoreValue.value}/${currentStoreId.value}`, handleAvailableOrdersResponse)
+        subscribedTopics.value.push(`pickup/orders/${currentStoreValue.value}/${currentStoreId.value}/>`)
 
         // Session no local must be set to true
-        const subscription = `fulfillment/task/*/${currentStoreId.value}/>`;
+        const subscription = `pickup/task/*/${currentStoreId.value}/>`;
         subscribedTopics.value.push(subscription)
         solaceStore.addSubscriptionHandler(subscription, handlefilfillmentTaskUpdates);
     }
@@ -82,6 +82,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
                     order.paymentInformation = updateToProcess.paymentInformation;
                     order.products = updateToProcess.products;
                     order.purchaseChannel = updateToProcess.purchaseChannel;
+                    order.pickUpTime = updateToProcess.pickUpTime;
                     order.rewardsInfo = updateToProcess.rewardsInfo;
                     order.storeid = updateToProcess.storeId;
                     order.storeName = updateToProcess.storeName;
@@ -97,6 +98,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
                 newOrder.paymentInformation = updateToProcess.paymentInformation;
                 newOrder.products = updateToProcess.products;
                 newOrder.purchaseChannel = updateToProcess.purchaseChannel;
+                newOrder.pickUpTime = updateToProcess.pickUpTime;
                 newOrder.rewardsInfo = updateToProcess.rewardsInfo;
                 newOrder.storeid = updateToProcess.storeId;
                 newOrder.storeName = updateToProcess.storeName;
@@ -136,7 +138,8 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         order.assignedTo = currentUser.value;
-        publishedTopic.value = `fulfillment/task/assigned/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
+        console.log(payload)
+        publishedTopic.value = `pickup/task/assigned/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
         solaceStore.publishMessage(publishedTopic.value, payload);
     }
 
@@ -148,7 +151,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         order.assignedTo = null;
-        publishedTopic.value = `fulfillment/task/released/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
+        publishedTopic.value = `pickup/task/released/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
         solaceStore.publishMessage(publishedTopic.value, payload);
     }
 
@@ -160,7 +163,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
             storeId: currentStoreId.value
         }
         order.fulfillmentStatus = 'COMPLETED'
-        publishedTopic.value = `fulfillment/task/completed/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
+        publishedTopic.value = `pickup/task/completed/${currentStoreId.value}/${order.RowKey}/${currentUser.value}`
         solaceStore.publishMessage(publishedTopic.value, payload);
     }
 

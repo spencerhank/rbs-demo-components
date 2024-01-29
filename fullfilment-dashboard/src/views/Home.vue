@@ -1,6 +1,6 @@
 <template>
   <div class="hero-banner-wrapper">
-    <video muted autoplay>
+    <video muted autoplay loop>
       <source
         data-src="//media.aholddelhaize.com/media/ynyn1t4t/2018_tempo_store_3_1.mp4?t=637642752626870000"
         type="video/mp4"
@@ -10,7 +10,7 @@
     <div class="hero-banner-content">
       <div class="text-h4 font-weight-light mb-n1">Welcome to the</div>
 
-      <h1 class="text-h2 font-weight-bold">Order Fulfillment Dashboard</h1>
+      <h1 class="text-h2 font-weight-bold">Pickup Order Task Dashboard</h1>
     </div>
   </div>
 

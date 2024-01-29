@@ -96,10 +96,13 @@
         ></v-progress-circular>
       </v-row>
       <v-row v-if="fulfillmentStore.availableFulfillmentOrders.length > 0">
+        <!-- Update to use filtered and sorted list -->
         <v-col
           cols="4"
           class="d-flex align-center justify-center"
-          v-for="(item, index) in fulfillmentStore.availableFulfillmentOrders"
+          v-for="(item, index) in filterAndSortAvailableOrders(
+            fulfillmentStore.availableFulfillmentOrders
+          )"
           :key="item.transactionId"
         >
           <v-card
@@ -111,10 +114,11 @@
             <v-card-item>
               <v-card-title align="left" class="ml-4">
                 {{ storeNameLookUp(item.storeName) }}
+                ({{ item.storeId }})
               </v-card-title>
-              <v-card-subtitle align="left" class="ml-4"
-                >Store Id: {{ item.storeId }}<br />
-                Last Updated: {{ item.Timestamp }}</v-card-subtitle
+              <v-card-subtitle align="left" class="ml-4">
+                Pickup Time:
+                {{ formattedDate(item.pickUpTime) }}</v-card-subtitle
               >
               <v-card-text align="left" class="ml-3 product-text">
                 <v-row
@@ -281,6 +285,24 @@ watch(
     });
   }
 );
+
+function filterAndSortAvailableOrders(allAvailableOrders) {
+  // TODO sort by last updated
+  // TODO filter out status
+  return allAvailableOrders.sort((a, b) => {
+    return new Date(a.pickUpTime) - new Date(b.pickUpTime);
+  });
+}
+
+function formattedDate(dateString) {
+  const date = new Date(dateString);
+  const quarter = Math.round(date.getMinutes() / 15) * 15;
+
+  return `${date.toDateString()} at ${date
+    .getHours()
+    .toString()
+    .padStart(2, "0")}:${quarter.toString().padStart(2, "0")}`;
+}
 
 function storeNameLookUp(storeValue) {
   let returnName;

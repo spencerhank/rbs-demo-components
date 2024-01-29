@@ -191,7 +191,7 @@ public class EmsProducer implements ExceptionListener {
                 marshaller.marshal(transaction,sw);
                 String xmlContent = sw.toString();
                 System.out.println(xmlContent);
-                ObjectMessage msg = session.createObjectMessage(xmlContent);
+                TextMessage msg = session.createTextMessage(xmlContent);
 
                 Instant now = Instant.now();
                 long time = (now.getEpochSecond() * 1000000000L) + now.getNano();
@@ -204,6 +204,7 @@ public class EmsProducer implements ExceptionListener {
                 msgProducer.send(msg);
                 logger.info("Delivered " + msg.toString());
                 ++sent;
+//                Thread.sleep(500);
 //                if (count > 0 && sent >= count) {
 //                    executor.shutdown();
 //                    latch.countDown();
