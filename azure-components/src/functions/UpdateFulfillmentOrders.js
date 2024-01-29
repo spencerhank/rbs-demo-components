@@ -13,7 +13,7 @@ app.http('UpdateFulfillmentOrders', {
             // context.log(order);
 
             let entityToUpdate = {
-                partitionKey: 'FulfillmentOrders',
+                partitionKey: 'PickupOrders',
                 rowKey: order.RowKey,
             }
 
@@ -30,8 +30,8 @@ app.http('UpdateFulfillmentOrders', {
 
             context.log(entityToUpdate);
             const client = new TableClient(`https://hspencerrbsdemostorage.table.core.windows.net`,
-                'FulfillmentOrders',
-                new AzureSASCredential(process.env["fulfillmentTableSasTokenForUpdates"]));
+                'PickupOrders',
+                new AzureSASCredential(process.env["pickUpTableSasTokenForUpdates"]));
 
             await client.upsertEntity(
                 entityToUpdate,

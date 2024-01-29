@@ -161,7 +161,7 @@ app.http('FetchFulfillmentOrdersByStore', {
         }
 
         const result = await new Promise((resolve, reject) => {
-            tableSvc.queryEntities("FulfillmentOrders", tableQuery, null, options,
+            tableSvc.queryEntities("PickupOrders", tableQuery, null, options,
                 (error, result) => {
                     if (error) {
                         reject(error);

@@ -124,7 +124,7 @@ app.http('UpsertTransactions', {
 
 
             let entityToUpsert = {
-                partitionKey: 'FulfillmentOrders',
+                partitionKey: 'PickupOrders',
                 rowKey: transaction.transactionId,
                 action: transaction.transactionAction,
                 paymentInformation: JSON.stringify(transaction.paymentInformation),
@@ -139,8 +139,8 @@ app.http('UpsertTransactions', {
 
             // context.log(entityToUpsert);
             const client = new TableClient(`https://hspencerrbsdemostorage.table.core.windows.net`,
-                'FulfillmentOrders',
-                new AzureSASCredential(process.env["fulfillmentTableSasTokenForUpdates"]));
+                'PickupOrders',
+                new AzureSASCredential(process.env["pickUpTableSasTokenForUpdates"]));
 
             await client.upsertEntity(
                 entityToUpsert,
