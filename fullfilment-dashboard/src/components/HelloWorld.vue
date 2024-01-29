@@ -117,7 +117,7 @@
                 ({{ item.storeId }})
               </v-card-title>
               <v-card-subtitle align="left" class="ml-4">
-                Pickup Time:
+                Pick Up Time:
                 {{ formattedDate(item.pickUpTime) }}</v-card-subtitle
               >
               <v-card-text align="left" class="ml-3 product-text">

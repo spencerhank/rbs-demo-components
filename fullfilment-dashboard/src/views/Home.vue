@@ -10,7 +10,7 @@
     <div class="hero-banner-content">
       <div class="text-h4 font-weight-light mb-n1">Welcome to the</div>
 
-      <h1 class="text-h2 font-weight-bold">Pickup Order Task Dashboard</h1>
+      <h1 class="text-h2 font-weight-bold">Pick Up Order Task Dashboard</h1>
     </div>
   </div>
 

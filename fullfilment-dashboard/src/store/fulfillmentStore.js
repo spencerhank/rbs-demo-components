@@ -84,7 +84,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
                     order.purchaseChannel = updateToProcess.purchaseChannel;
                     order.pickUpTime = updateToProcess.pickUpTime;
                     order.rewardsInfo = updateToProcess.rewardsInfo;
-                    order.storeid = updateToProcess.storeId;
+                    order.storeId = updateToProcess.storeId;
                     order.storeName = updateToProcess.storeName;
                 }
             });
@@ -100,7 +100,7 @@ export const useFulfillmentStore = defineStore('fulfillmentStore', () => {
                 newOrder.purchaseChannel = updateToProcess.purchaseChannel;
                 newOrder.pickUpTime = updateToProcess.pickUpTime;
                 newOrder.rewardsInfo = updateToProcess.rewardsInfo;
-                newOrder.storeid = updateToProcess.storeId;
+                newOrder.storeId = updateToProcess.storeId;
                 newOrder.storeName = updateToProcess.storeName;
                 availableFulfillmentOrders.value.push(newOrder);
             }
